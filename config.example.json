@@ -1,0 +1,34 @@
+{
+  "ovhAccounts": [
+    {
+      "id": "account1",
+      "name": "Main Account",
+      "appKey": "YOUR_APP_KEY",
+      "appSecret": "YOUR_APP_SECRET",
+      "consumerKey": "YOUR_CONSUMER_KEY",
+      "endpoint": "ovh-eu",
+      "domains": ["example.com", "example2.com"]
+    }
+  ],
+  "ipProviders": [
+    {
+      "id": "curlmyip",
+      "name": "CurlMyIP",
+      "ipv4Url": "https://api.ipify.org?format=text",
+      "ipv6Url": "https://api6.ipify.org?format=text",
+      "enabled": true
+    },
+    {
+      "id": "ifconfig",
+      "name": "ifconfig.me",
+      "ipv4Url": "https://ipv4.icanhazip.com",
+      "ipv6Url": "https://ipv6.icanhazip.com",
+      "enabled": false
+    }
+  ],
+  "autoUpdate": {
+    "enabled": false,
+    "checkInterval": 300,
+    "targetDomains": []
+  }
+}

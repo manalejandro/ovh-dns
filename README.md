@@ -1,36 +1,207 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# OVH DNS Manager
 
-## Getting Started
+A modern, multi-account DNS manager for OVH with automatic IP updates. Built with Next.js, React, and Tailwind CSS.
 
-First, run the development server:
+![License](https://img.shields.io/badge/license-MIT-blue.svg)
+![Next.js](https://img.shields.io/badge/Next.js-16.0-black)
+![React](https://img.shields.io/badge/React-19-blue)
 
+## ✨ Features
+
+- 🌐 **Multi-Account Support**: Manage DNS records across multiple OVH accounts
+- 🔄 **Bulk Updates**: Update multiple DNS records simultaneously (IPv4/IPv6)
+- 📊 **Real-time Monitoring**: Track your public IP addresses from multiple providers
+- 🤖 **Automatic Updates**: Automatically update DNS records when your IP changes
+- 🎨 **Modern UI**: Beautiful, responsive interface built with Tailwind CSS
+- ⚡ **Fast**: Built with Next.js for optimal performance
+- 🔒 **Secure**: Local configuration storage, credentials never leave your server
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- Node.js 18.x or higher
+- npm or yarn
+- OVH API credentials ([Get them here](https://eu.api.ovh.com/createToken/))
+
+### Installation
+
+1. Clone the repository:
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone <repository-url>
+cd ovh-dns
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. Install dependencies:
+```bash
+npm install
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+3. Create your configuration file:
+```bash
+cp config.example.json config.json
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+4. Edit \`config.json\` with your OVH API credentials:
+```json
+{
+  "ovhAccounts": [
+    {
+      "id": "account1",
+      "name": "My Account",
+      "appKey": "YOUR_APP_KEY",
+      "appSecret": "YOUR_APP_SECRET",
+      "consumerKey": "YOUR_CONSUMER_KEY",
+      "endpoint": "ovh-eu",
+      "domains": ["example.com"]
+    }
+  ]
+}
+```
 
-## Learn More
+5. Run the development server:
+```bash
+npm run dev
+```
 
-To learn more about Next.js, take a look at the following resources:
+6. Open [http://localhost:3000](http://localhost:3000) in your browser
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Production Build
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+npm run build
+npm start
+```
 
-## Deploy on Vercel
+## 📖 Usage
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Managing DNS Records
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. **Select a Domain**: Choose a domain from the dropdown
+2. **View Records**: See all DNS records for the selected domain
+3. **Add Record**: Click "Add Record" to create a new DNS entry
+4. **Edit Record**: Click the edit icon on any record to modify it
+5. **Delete Record**: Click the trash icon to remove a record
+6. **Bulk Update**: Select multiple records and update their IPs in one action
+
+### Bulk IP Updates
+
+1. Select multiple records using checkboxes
+2. Click "Update X selected record(s)"
+3. Choose record type (A for IPv4 or AAAA for IPv6)
+4. Enter the new IP address
+5. Click "Update" to apply changes
+
+### Automatic IP Updates
+
+1. Go to Settings
+2. Enable IP providers (e.g., ipify.org, icanhazip.com)
+3. Configure automatic updates:
+   - Enable automatic updates
+   - Set check interval (in seconds)
+   - Specify target domains
+4. The system will periodically check your public IP and update DNS records
+
+### Multi-Account Configuration
+
+Add multiple OVH accounts in Settings to manage DNS across different accounts:
+
+1. Click "Add Account"
+2. Enter account details (App Key, App Secret, Consumer Key)
+3. Select the OVH endpoint (EU, CA, US)
+4. Add domains associated with this account
+
+## 🔧 Configuration
+
+### OVH API Credentials
+
+You need to create an OVH API application:
+
+1. Go to https://eu.api.ovh.com/createToken/
+2. Fill in the application details
+3. Grant the following permissions:
+   - GET /domain/zone/*
+   - POST /domain/zone/*
+   - PUT /domain/zone/*
+   - DELETE /domain/zone/*
+4. Save your credentials in \`config.json\`
+
+### IP Providers
+
+The application supports multiple IP providers for fetching your public IP:
+
+- **ipify.org** (default)
+- **icanhazip.com**
+- Custom providers (add your own URLs)
+
+You can enable/disable providers and configure custom endpoints in Settings.
+
+## 🛠️ Technology Stack
+
+- **Framework**: Next.js 16.0
+- **UI Library**: React 19
+- **Styling**: Tailwind CSS 3.4
+- **Icons**: Lucide React
+- **HTTP Client**: Native Fetch API
+- **OVH API**: ovh package
+
+## 📁 Project Structure
+
+```
+ovh-dns/
+├── app/
+│   ├── api/          # API routes
+│   ├── layout.tsx    # Root layout
+│   ├── page.tsx      # Main page
+│   └── globals.css   # Global styles
+├── components/
+│   ├── DNSManager.js # DNS management interface
+│   └── Settings.js   # Settings interface
+├── lib/
+│   ├── ovh-service.js        # OVH API service
+│   └── ip-monitor-service.js # IP monitoring service
+├── public/           # Static assets
+├── config.json       # Configuration (not in git)
+└── config.example.json # Configuration template
+```
+
+## 🐛 Troubleshooting
+
+### DNS Records Not Loading
+
+- Check your OVH API credentials
+- Verify the domain exists in your OVH account
+- Check the browser console for errors
+
+### IP Detection Not Working
+
+- Ensure at least one IP provider is enabled
+- Check your internet connection
+- Try a different IP provider
+
+### Configuration Not Saving
+
+- Verify file permissions for \`config.json\`
+- Check server logs for errors
+
+## 🤝 Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- OVH for their excellent API
+- Next.js team for the amazing framework
+- All contributors and users of this project
+
+## 📞 Support
+
+If you encounter any issues or have questions, please open an issue on GitHub.
+
+---
+
+Made with ❤️ for the DNS management community
