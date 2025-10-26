@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Globe, Plus, Edit, Trash2, RefreshCw, Check, X, Search, Filter } from 'lucide-react';
+import { Globe, Plus, Edit, Trash2, RefreshCw, Check, X, Search, Filter, Download, Upload, Trash } from 'lucide-react';
 
 const DNSManager = () => {
     const [domains, setDomains] = useState([]);
@@ -25,6 +25,10 @@ const DNSManager = () => {
         target: '',
         type: 'A'
     });
+    const [showImport, setShowImport] = useState(false);
+    const [importContent, setImportContent] = useState('');
+    const [replaceAll, setReplaceAll] = useState(false);
+    const [importResult, setImportResult] = useState(null);
 
     const fetchDomains = async () => {
         try {
@@ -168,6 +172,97 @@ const DNSManager = () => {
         }
     };
 
+    const handleBulkDelete = async () => {
+        if (selectedRecords.size === 0) return;
+        
+        if (!confirm(`¿Está seguro de que desea eliminar ${selectedRecords.size} registro(s)?`)) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/domains/${selectedDomain}/bulk-delete`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    recordIds: Array.from(selectedRecords)
+                })
+            });
+            
+            const data = await response.json();
+            if (data.success) {
+                setSelectedRecords(new Set());
+                fetchRecords();
+            }
+        } catch (error) {
+            console.error('Error bulk deleting records:', error);
+        }
+    };
+
+    const handleExport = async () => {
+        if (!selectedDomain) return;
+        
+        try {
+            const response = await fetch(`/api/domains/${selectedDomain}/export`);
+            
+            if (response.ok) {
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${selectedDomain}.zone`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+            }
+        } catch (error) {
+            console.error('Error exporting zone:', error);
+        }
+    };
+
+    const handleImport = async () => {
+        if (!importContent.trim()) {
+            alert('Por favor, ingrese el contenido de la zona BIND9');
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/domains/${selectedDomain}/import`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    zoneContent: importContent,
+                    replaceAll: replaceAll
+                })
+            });
+            
+            const data = await response.json();
+            if (data.success) {
+                setImportResult(data);
+                setTimeout(() => {
+                    setShowImport(false);
+                    setImportContent('');
+                    setReplaceAll(false);
+                    setImportResult(null);
+                    fetchRecords();
+                }, 3000);
+            }
+        } catch (error) {
+            console.error('Error importing zone:', error);
+        }
+    };
+
+    const handleFileImport = (e) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                setImportContent(event.target?.result || '');
+            };
+            reader.readAsText(file);
+        }
+    };
+
     const toggleRecordSelection = (recordId) => {
         const newSelection = new Set(selectedRecords);
         if (newSelection.has(recordId)) {
@@ -271,12 +366,30 @@ const DNSManager = () => {
                         ))}
                     </select>
                 </div>
-                <div className="pt-7">
+                <div className="pt-7 flex gap-2">
+                    <button
+                        onClick={handleExport}
+                        disabled={!selectedDomain}
+                        className="inline-flex items-center px-4 py-3 border border-gray-300 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 transition-all"
+                        title="Exportar zona BIND9"
+                    >
+                        <Download className="w-4 h-4 mr-2" />
+                        Exportar
+                    </button>
+                    <button
+                        onClick={() => setShowImport(true)}
+                        disabled={!selectedDomain}
+                        className="inline-flex items-center px-4 py-3 border border-gray-300 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 transition-all"
+                        title="Importar zona BIND9"
+                    >
+                        <Upload className="w-4 h-4 mr-2" />
+                        Importar
+                    </button>
                     <button
                         onClick={() => setShowAddRecord(true)}
                         className="inline-flex items-center px-6 py-3 border border-transparent text-sm font-medium rounded-lg text-white bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all"
                     >
-                        <Plus className="w-4 h-4" />
+                        <Plus className="w-4 h-4 mr-2" />
                         Add Record
                     </button>
                 </div>
@@ -320,12 +433,22 @@ const DNSManager = () => {
                         <span className="text-sm font-medium text-blue-900">
                             {selectedRecords.size} registro(s) seleccionado(s)
                         </span>
-                        <button
-                            onClick={() => setBulkUpdate({ ...bulkUpdate, show: true })}
-                            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all"
-                        >
-                            Actualización masiva
-                        </button>
+                        <div className="flex gap-2">
+                            <button
+                                onClick={() => setBulkUpdate({ ...bulkUpdate, show: true })}
+                                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all"
+                            >
+                                <Edit className="w-4 h-4 mr-2" />
+                                Actualización masiva
+                            </button>
+                            <button
+                                onClick={handleBulkDelete}
+                                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-all"
+                            >
+                                <Trash className="w-4 h-4 mr-2" />
+                                Eliminar seleccionados
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}
@@ -602,6 +725,94 @@ const DNSManager = () => {
                                 Update
                             </button>
                         </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Import modal */}
+            {showImport && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+                    <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full p-8 max-h-[90vh] overflow-y-auto">
+                        <h3 className="text-2xl font-bold text-gray-900 mb-6">Importar Zona BIND9</h3>
+                        
+                        {importResult ? (
+                            <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+                                <h4 className="font-semibold text-green-900 mb-2">Importación completada</h4>
+                                <p className="text-sm text-green-800">
+                                    Total: {importResult.summary.total} | 
+                                    Exitosos: {importResult.summary.success} | 
+                                    Fallidos: {importResult.summary.failed}
+                                </p>
+                            </div>
+                        ) : (
+                            <>
+                                <div className="mb-4">
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Cargar archivo .zone
+                                    </label>
+                                    <input
+                                        type="file"
+                                        accept=".zone,.txt"
+                                        onChange={handleFileImport}
+                                        className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                                    />
+                                </div>
+                                
+                                <div className="mb-4">
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        O pegar contenido de zona BIND9
+                                    </label>
+                                    <textarea
+                                        value={importContent}
+                                        onChange={(e) => setImportContent(e.target.value)}
+                                        placeholder="example.com.  3600  IN  A  192.168.1.1&#10;www  3600  IN  CNAME  example.com."
+                                        rows={12}
+                                        className="block w-full border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 py-2 px-3 font-mono text-sm"
+                                    />
+                                </div>
+                                
+                                <div className="mb-6">
+                                    <label className="flex items-center">
+                                        <input
+                                            type="checkbox"
+                                            checked={replaceAll}
+                                            onChange={(e) => setReplaceAll(e.target.checked)}
+                                            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                                        />
+                                        <span className="ml-2 text-sm text-gray-700">
+                                            Reemplazar todos los registros existentes (excepto SOA y NS raíz)
+                                        </span>
+                                    </label>
+                                    {replaceAll && (
+                                        <p className="mt-2 text-sm text-red-600">
+                                            ⚠️ Advertencia: Esta acción eliminará todos los registros existentes antes de importar.
+                                        </p>
+                                    )}
+                                </div>
+                                
+                                <div className="mt-8 flex justify-end space-x-3">
+                                    <button
+                                        onClick={() => {
+                                            setShowImport(false);
+                                            setImportContent('');
+                                            setReplaceAll(false);
+                                        }}
+                                        className="px-6 py-2 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-all"
+                                    >
+                                        <X className="h-4 w-4 inline mr-1" />
+                                        Cancelar
+                                    </button>
+                                    <button
+                                        onClick={handleImport}
+                                        disabled={!importContent.trim()}
+                                        className="px-6 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 disabled:opacity-50 transition-all"
+                                    >
+                                        <Upload className="h-4 w-4 inline mr-1" />
+                                        Importar
+                                    </button>
+                                </div>
+                            </>
+                        )}
                     </div>
                 </div>
             )}
