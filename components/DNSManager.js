@@ -309,6 +309,7 @@ const DNSManager = () => {
             'CNAME': 'bg-green-500 text-white',
             'MX': 'bg-orange-500 text-white',
             'TXT': 'bg-gray-500 text-white',
+            'SPF': 'bg-cyan-500 text-white',
             'SRV': 'bg-pink-500 text-white',
             'NS': 'bg-yellow-500 text-white'
         };
@@ -420,6 +421,7 @@ const DNSManager = () => {
                         <option value="CNAME">CNAME</option>
                         <option value="MX">MX</option>
                         <option value="TXT">TXT</option>
+                        <option value="SPF">SPF</option>
                         <option value="SRV">SRV</option>
                         <option value="NS">NS</option>
                     </select>
@@ -470,6 +472,7 @@ const DNSManager = () => {
                                 <option value="CNAME">CNAME</option>
                                 <option value="MX">MX</option>
                                 <option value="TXT">TXT</option>
+                                <option value="SPF">SPF</option>
                                 <option value="SRV">SRV</option>
                                 <option value="NS">NS</option>
                             </select>
@@ -627,6 +630,7 @@ const DNSManager = () => {
                                     <option value="CNAME">CNAME</option>
                                     <option value="MX">MX</option>
                                     <option value="TXT">TXT</option>
+                                    <option value="SPF">SPF</option>
                                     <option value="SRV">SRV</option>
                                     <option value="NS">NS</option>
                                 </select>
